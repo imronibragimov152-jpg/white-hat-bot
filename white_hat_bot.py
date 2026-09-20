@@ -2,9 +2,10 @@ import requests
 import random
 import time
 import os
+import threading
 from datetime import datetime
+from flask import Flask
 
-# Tokenni endi koddan emas, Render dagi Environment dan oladi - xavfsiz!
 BOT_TOKEN = os.getenv("BOT_TOKEN")
 CHANNEL_ID = os.getenv("CHANNEL_ID", "@imron_white")
 
@@ -26,6 +27,9 @@ IMAGES = [
 ]
 
 def send_post():
+    if not BOT_TOKEN:
+        print("BOT_TOKEN yoq!")
+        return
     post = random.choice(POSTS)
     image_url = random.choice(IMAGES)
     url = f"https://api.telegram.org/bot{BOT_TOKEN}/sendPhoto"
@@ -40,14 +44,22 @@ def send_post():
     except Exception as e:
         print(f"Xatolik: {e}")
 
-if __name__ == "__main__":
-    if not BOT_TOKEN:
-        print("❌ BOT_TOKEN topilmadi! Render da Environment Variables ga qo'shing.")
-        exit(1)
-        
-    print("🤖 White Hat bot CLOUD da ishga tushdi! 24/7 ishlaydi")
+def bot_loop():
+    print("🤖 Bot loop boshlandi! Har 2 soatda post yuboradi")
+    time.sleep(10)
     send_post()
     while True:
-        print(f"Keyingi post 2 soatdan keyin...")
+        print("Keyingi post 2 soatdan keyin...")
         time.sleep(7200)
         send_post()
+
+app = Flask(__name__)
+
+@app.route('/')
+def home():
+    return "🤖 White Hat Bot 24/7 ishlayapti! ✅"
+
+if __name__ == "__main__":
+    threading.Thread(target=bot_loop, daemon=True).start()
+    port = int(os.environ.get("PORT", 10000))
+    app.run(host="0.0.0.0", port=port)
